@@ -32,7 +32,7 @@ app.get('/pages', async (req, res) => {
 })
 
 app.post('/addcategory', async (req, res) => {
-  const { name, color, pages } = req.body;
+  const { name, color } = req.body;
   if (!name || !color) {
     return res.status(400).json({ error: 'Name and color are required.' });
   }
@@ -45,8 +45,8 @@ app.post('/addcategory', async (req, res) => {
     })
     if (!exists) {
       const id = keys.length > 0 ? (keys[keys.length - 1] * 1) + 1 : 0;
-      await pagesdb.push(`/${id}`, { name, color, pages });
-      console.log('Saved:', { name, color, pages });
+      await pagesdb.push(`/${id}`, { name, color, 'pages': {} });
+      console.log('Saved:', { name, color });
       res.status(201).json({ message: 'Category added successfully', id });
     }
   } catch (error) {
@@ -56,13 +56,14 @@ app.post('/addcategory', async (req, res) => {
 })
 
 app.post('/addpage', async (req, res) => {
-  const { name, category, url, target } = req.body;
-  if (!name || !category || !url || !target) {
+  const { categoryId, name, url, target } = req.body;
+  console.log(categoryId, name, url, target)
+  if (!name || !categoryId || !url || !target) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    const pages = await pagesdb.getData(`/${category}/pages/`);
+    const pages = await pagesdb.getData(`/${categoryId}/pages/`);
     const keys = Object.keys(pages);
 
     const exists = Object.entries(pages).some(([key, value]) => {
@@ -71,7 +72,7 @@ app.post('/addpage', async (req, res) => {
     if(!exists){
       const id = keys.length > 0 ? (keys[keys.length - 1] * 1) + 1 : 0;
       const newPage = { name: name, url, target };
-      await pagesdb.push(`/${category}/pages/${id}`, newPage);
+      await pagesdb.push(`/${categoryId}/pages/${id}`, newPage);
       res.status(201).json({ message: 'Page added successfully', id });
     }
   } catch (error) {
@@ -82,6 +83,7 @@ app.post('/addpage', async (req, res) => {
 
 app.put('/categories/:id', async (req, res) => {
   const categoryId = req.params.id;
+  console.log(req.body)
   const { name, color } = req.body;
   console.log(name, color)
 
